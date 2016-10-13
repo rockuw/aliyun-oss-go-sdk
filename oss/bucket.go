@@ -5,6 +5,8 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/xml"
+	"fmt"
+	"hash"
 	"hash/crc64"
 	"io"
 	"io/ioutil"
@@ -12,6 +14,8 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
+	"time"
 )
 
 // Bucket implements the operations of object.
@@ -45,6 +49,38 @@ func (bucket Bucket) PutObject(objectKey string, reader io.Reader, options ...Op
 	defer resp.Body.Close()
 
 	return err
+}
+
+//
+// SignedURL returns a signed URL for the object.
+// objectKey string The object key
+// expires int      The expiration time for the URL
+//
+// returns the signed URL
+//
+func (bucket Bucket) SignedURL(objectKey string, expires int64) string {
+	resource := bucket.Client.Conn.url.getResource(bucket.BucketName, objectKey, "")
+	expireAt := time.Now().Unix() + expires
+	stringToSign := strings.Join([]string{
+		"GET", // HTTP method
+		"",    // Content-MD5
+		"",    // Content-Type
+		fmt.Sprintf("%d", expireAt),
+		resource,
+	}, "\n")
+
+	fmt.Printf("string to sign: %s", stringToSign)
+
+	signature := bucket.Client.Conn.sign(stringToSign)
+	accessKeyID := url.QueryEscape(bucket.Client.Conn.config.AccessKeyID)
+	queryString := strings.Join([]string{
+		fmt.Sprintf("%s=%s", "OSSAccessKeyId", accessKeyID),
+		fmt.Sprintf("%s=%d", "Expires", expireAt),
+		fmt.Sprintf("%s=%s", "Signature", url.QueryEscape(signature)),
+	}, "&")
+
+	return bucket.Client.Conn.url.getURL(
+		bucket.BucketName, objectKey, queryString).String()
 }
 
 //

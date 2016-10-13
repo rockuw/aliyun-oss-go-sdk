@@ -56,6 +56,14 @@ func (conn Conn) signHeader(req *http.Request, canonicalizedResource string) {
 	req.Header.Set(HTTPHeaderAuthorization, authorizationStr)
 }
 
+func (conn Conn) sign(stringToSign string) string {
+	h := hmac.New(func() hash.Hash { return sha1.New() }, []byte(conn.config.AccessKeySecret))
+	io.WriteString(h, stringToSign)
+	signature := base64.StdEncoding.EncodeToString(h.Sum(nil))
+
+	return signature
+}
+
 // Additional function for function SignHeader.
 func newHeaderSorter(m map[string]string) *headerSorter {
 	hs := &headerSorter{
