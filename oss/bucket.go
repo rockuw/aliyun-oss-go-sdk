@@ -69,8 +69,6 @@ func (bucket Bucket) SignedURL(objectKey string, expires int64) string {
 		resource,
 	}, "\n")
 
-	fmt.Printf("string to sign: %s", stringToSign)
-
 	signature := bucket.Client.Conn.sign(stringToSign)
 	accessKeyID := url.QueryEscape(bucket.Client.Conn.config.AccessKeyID)
 	queryString := strings.Join([]string{

@@ -373,10 +373,6 @@ func (um urlMaker) getURL(bucket, object, params string) *url.URL {
 	var host = ""
 	var path = ""
 
-	if !um.IsProxy {
-		object = url.QueryEscape(object)
-	}
-
 	if um.Type == urlTypeCname {
 		host = um.NetLoc
 		path = "/" + object
