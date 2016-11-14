@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"fmt"
-	"hash"
 	"hash/crc64"
 	"io"
 	"io/ioutil"
